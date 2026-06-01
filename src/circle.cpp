@@ -1,38 +1,46 @@
-// Copyright 2022 UNN-CS
-#include <cstdint>
-#include <cmath>
-#include <stdexcept>
+// Copyright 2025 UNN-CS
 #include "circle.h"
 
-Circle::Circle(double r) {
-  setRadius(r);
+#include <cmath>
+#include <stdexcept>
+
+double Circle::pi() {
+  return std::acos(-1.0);
 }
 
-void Circle::setRadius(double r) {
-  if (r < 0) {
-    throw std::invalid_argument(
-        "Радиус не может быть отрицательным");
+void Circle::requireNonNegative(double value) {
+  if (value < 0.0) {
+    throw std::invalid_argument("circle value must be non-negative");
   }
-  radius = r;
-  updateFromRadius();
 }
 
-void Circle::setFerence(double f) {
-  if (f < 0) {
-    throw std::invalid_argument(
-        "Длина окружности не может быть отрицательной");
-  }
-  ference = f;
-  updateFromFerence();
+void Circle::refreshFromRadius() {
+  ference = 2.0 * pi() * radius;
+  area = pi() * radius * radius;
 }
 
-void Circle::setArea(double a) {
-  if (a < 0) {
-    throw std::invalid_argument(
-        "Площадь не может быть отрицательной");
-  }
-  area = a;
-  updateFromArea();
+Circle::Circle(double radiusValue) {
+  setRadius(radiusValue);
+}
+
+void Circle::setRadius(double radiusValue) {
+  requireNonNegative(radiusValue);
+  radius = radiusValue;
+  refreshFromRadius();
+}
+
+void Circle::setFerence(double ferenceValue) {
+  requireNonNegative(ferenceValue);
+  ference = ferenceValue;
+  radius = ference / (2.0 * pi());
+  area = pi() * radius * radius;
+}
+
+void Circle::setArea(double areaValue) {
+  requireNonNegative(areaValue);
+  area = areaValue;
+  radius = std::sqrt(area / pi());
+  ference = 2.0 * pi() * radius;
 }
 
 double Circle::getRadius() const {
@@ -45,19 +53,4 @@ double Circle::getFerence() const {
 
 double Circle::getArea() const {
   return area;
-}
-
-void Circle::updateFromRadius() {
-  ference = 2 * PI * radius;
-  area = PI * radius * radius;
-}
-
-void Circle::updateFromFerence() {
-  radius = ference / (2 * PI);
-  area = PI * radius * radius;
-}
-
-void Circle::updateFromArea() {
-  radius = std::sqrt(area / PI);
-  ference = 2 * PI * radius;
 }

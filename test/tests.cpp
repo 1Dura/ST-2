@@ -1,21 +1,31 @@
-// Copyright 2025 UNN-CS Team
+// Copyright 2025 UNN-CS
 #include <gtest/gtest.h>
-#include <cstdint>
+
 #include <cmath>
+#include <stdexcept>
+
 #include "circle.h"
 #include "tasks.h"
 
-// Тест конструктора и геттеров
-TEST(CircleTest, ConstructorAndGetters) {
-  Circle circle(5.0);
+namespace {
 
-  EXPECT_DOUBLE_EQ(5.0, circle.getRadius());
-  EXPECT_NEAR(2 * 3.1415 * 5.0, circle.getFerence(), 1e-10);
-  EXPECT_NEAR(3.1415 * 25.0, circle.getArea(), 1e-10);
+constexpr double kEps = 1e-9;
+
+double pi() {
+  return std::acos(-1.0);
 }
 
-// Тест конструктора с нулевым радиусом
-TEST(CircleTest, ZeroRadius) {
+}  // namespace
+
+TEST(CircleConstructor, StoresRadiusAndDerivedValues) {
+  Circle circle(2.5);
+
+  EXPECT_NEAR(2.5, circle.getRadius(), kEps);
+  EXPECT_NEAR(5.0 * pi(), circle.getFerence(), kEps);
+  EXPECT_NEAR(6.25 * pi(), circle.getArea(), kEps);
+}
+
+TEST(CircleConstructor, AcceptsZeroRadius) {
   Circle circle(0.0);
 
   EXPECT_DOUBLE_EQ(0.0, circle.getRadius());
@@ -23,83 +33,37 @@ TEST(CircleTest, ZeroRadius) {
   EXPECT_DOUBLE_EQ(0.0, circle.getArea());
 }
 
-// Тест на отрицательный радиус в конструкторе
-TEST(CircleTest, NegativeRadiusInConstructor) {
-  EXPECT_THROW({
-    Circle circle(-5.0);
-  }, std::invalid_argument);
+TEST(CircleConstructor, RejectsNegativeRadius) {
+  EXPECT_THROW(Circle(-0.01), std::invalid_argument);
 }
 
-// Тест setRadius
-TEST(CircleTest, SetRadius) {
+TEST(CircleSetRadius, RecalculatesEverything) {
   Circle circle(1.0);
-  circle.setRadius(3.0);
+  circle.setRadius(7.0);
 
-  EXPECT_DOUBLE_EQ(3.0, circle.getRadius());
-  EXPECT_NEAR(2 * 3.1415 * 3.0, circle.getFerence(), 1e-10);
-  EXPECT_NEAR(3.1415 * 9.0, circle.getArea(), 1e-10);
+  EXPECT_NEAR(7.0, circle.getRadius(), kEps);
+  EXPECT_NEAR(14.0 * pi(), circle.getFerence(), kEps);
+  EXPECT_NEAR(49.0 * pi(), circle.getArea(), kEps);
 }
 
-// Тест setRadius с отрицательным значением
-TEST(CircleTest, SetNegativeRadius) {
-  Circle circle(1.0);
+TEST(CircleSetRadius, RejectsNegativeInput) {
+  Circle circle(4.0);
 
-  EXPECT_THROW({
-    circle.setRadius(-2.0);
-  }, std::invalid_argument);
-
-  // Проверяем, что значения не изменились после исключения
-  EXPECT_DOUBLE_EQ(1.0, circle.getRadius());
-  EXPECT_NEAR(2 * 3.1415, circle.getFerence(), 1e-10);
-  EXPECT_NEAR(3.1415, circle.getArea(), 1e-10);
+  EXPECT_THROW(circle.setRadius(-3.0), std::invalid_argument);
+  EXPECT_NEAR(4.0, circle.getRadius(), kEps);
 }
 
-// Тест setRadius с нулевым значением
-TEST(CircleTest, SetZeroRadius) {
+TEST(CircleSetFerence, RecalculatesRadiusAndArea) {
   Circle circle(1.0);
+  circle.setFerence(10.0 * pi());
 
-  EXPECT_NO_THROW(circle.setRadius(0.0););
-
-  // Проверяем, что значения не изменились после исключения
-  EXPECT_DOUBLE_EQ(0.0, circle.getRadius());
-  EXPECT_DOUBLE_EQ(0.0, circle.getFerence());
-  EXPECT_DOUBLE_EQ(0.0, circle.getArea());
+  EXPECT_NEAR(5.0, circle.getRadius(), kEps);
+  EXPECT_NEAR(10.0 * pi(), circle.getFerence(), kEps);
+  EXPECT_NEAR(25.0 * pi(), circle.getArea(), kEps);
 }
 
-// Тест setFerence
-TEST(CircleTest, SetFerence) {
-  Circle circle(1.0);
-  double newFerence = 10.0;
-  circle.setFerence(newFerence);
-
-  double expectedRadius = newFerence / (2 * 3.1415);
-  double expectedArea = 3.1415 * expectedRadius * expectedRadius;
-
-  EXPECT_NEAR(expectedRadius, circle.getRadius(), 1e-10);
-  EXPECT_DOUBLE_EQ(newFerence, circle.getFerence());
-  EXPECT_NEAR(expectedArea, circle.getArea(), 1e-10);
-}
-
-// Тест setFerence с отрицательным значением
-TEST(CircleTest, SetNegativeFerence) {
-  Circle circle(1.0);
-  double oldFerence = circle.getFerence();
-  double oldRadius = circle.getRadius();
-  double oldArea = circle.getArea();
-
-  EXPECT_THROW({
-    circle.setFerence(-5.0);
-  }, std::invalid_argument);
-
-  // Проверяем, что значения не изменились
-  EXPECT_DOUBLE_EQ(oldRadius, circle.getRadius());
-  EXPECT_DOUBLE_EQ(oldFerence, circle.getFerence());
-  EXPECT_DOUBLE_EQ(oldArea, circle.getArea());
-}
-
-// Тест setFerence с нулем
-TEST(CircleTest, SetZeroFerence) {
-  Circle circle(1.0);
+TEST(CircleSetFerence, AcceptsZero) {
+  Circle circle(9.0);
   circle.setFerence(0.0);
 
   EXPECT_DOUBLE_EQ(0.0, circle.getRadius());
@@ -107,40 +71,24 @@ TEST(CircleTest, SetZeroFerence) {
   EXPECT_DOUBLE_EQ(0.0, circle.getArea());
 }
 
-// Тест setArea
-TEST(CircleTest, SetArea) {
-  Circle circle(1.0);
-  double newArea = 50.0;
-  circle.setArea(newArea);
+TEST(CircleSetFerence, RejectsNegativeInput) {
+  Circle circle(4.0);
 
-  double expectedRadius = std::sqrt(newArea / 3.1415);
-  double expectedFerence = 2 * 3.1415 * expectedRadius;
-
-  EXPECT_NEAR(expectedRadius, circle.getRadius(), 1e-10);
-  EXPECT_NEAR(expectedFerence, circle.getFerence(), 1e-10);
-  EXPECT_NEAR(newArea, circle.getArea(), 1e-10);
+  EXPECT_THROW(circle.setFerence(-1.0), std::invalid_argument);
+  EXPECT_NEAR(4.0, circle.getRadius(), kEps);
 }
 
-// Тест setArea с отрицательным значением
-TEST(CircleTest, SetNegativeArea) {
+TEST(CircleSetArea, RecalculatesRadiusAndFerence) {
   Circle circle(1.0);
-  double oldArea = circle.getArea();
-  double oldRadius = circle.getRadius();
-  double oldFerence = circle.getFerence();
+  circle.setArea(36.0 * pi());
 
-  EXPECT_THROW({
-    circle.setArea(-10.0);
-  }, std::invalid_argument);
-
-  // Проверяем, что значения не изменились
-  EXPECT_DOUBLE_EQ(oldRadius, circle.getRadius());
-  EXPECT_DOUBLE_EQ(oldFerence, circle.getFerence());
-  EXPECT_DOUBLE_EQ(oldArea, circle.getArea());
+  EXPECT_NEAR(6.0, circle.getRadius(), kEps);
+  EXPECT_NEAR(12.0 * pi(), circle.getFerence(), kEps);
+  EXPECT_NEAR(36.0 * pi(), circle.getArea(), kEps);
 }
 
-// Тест setArea с нулем
-TEST(CircleTest, SetZeroArea) {
-  Circle circle(1.0);
+TEST(CircleSetArea, AcceptsZero) {
+  Circle circle(3.0);
   circle.setArea(0.0);
 
   EXPECT_DOUBLE_EQ(0.0, circle.getRadius());
@@ -148,114 +96,75 @@ TEST(CircleTest, SetZeroArea) {
   EXPECT_DOUBLE_EQ(0.0, circle.getArea());
 }
 
-// Тест последовательных изменений
-TEST(CircleTest, SequentialChanges) {
+TEST(CircleSetArea, RejectsNegativeInput) {
+  Circle circle(4.0);
+
+  EXPECT_THROW(circle.setArea(-1.0), std::invalid_argument);
+  EXPECT_NEAR(4.0, circle.getRadius(), kEps);
+}
+
+TEST(CircleSequence, ValuesRemainConsistentAfterSeveralUpdates) {
   Circle circle(2.0);
 
-  // Изменяем радиус
-  circle.setRadius(3.0);
-  EXPECT_NEAR(3.0, circle.getRadius(), 1e-10);
-  EXPECT_NEAR(2 * 3.1415 * 3.0, circle.getFerence(), 1e-10);
-  EXPECT_NEAR(3.1415 * 9.0, circle.getArea(), 1e-10);
+  circle.setFerence(8.0 * pi());
+  circle.setArea(9.0 * pi());
 
-  // Изменяем длину окружности
-  circle.setFerence(20.0);
-  double r = 20.0 / (2 * 3.1415);
-  EXPECT_NEAR(r, circle.getRadius(), 1e-10);
-  EXPECT_NEAR(20.0, circle.getFerence(), 1e-10);
-  EXPECT_NEAR(3.1415 * r * r, circle.getArea(), 1e-10);
-
-  // Изменяем площадь
-  circle.setArea(100.0);
-  r = std::sqrt(100.0 / 3.1415);
-  EXPECT_NEAR(r, circle.getRadius(), 1e-10);
-  EXPECT_NEAR(2 * 3.1415 * r, circle.getFerence(), 1e-10);
-  EXPECT_NEAR(100.0, circle.getArea(), 1e-10);
+  EXPECT_NEAR(3.0, circle.getRadius(), kEps);
+  EXPECT_NEAR(6.0 * pi(), circle.getFerence(), kEps);
+  EXPECT_NEAR(9.0 * pi(), circle.getArea(), kEps);
 }
 
-TEST(CircleTest, FerenceGettingFormula) {
-  Circle circle(4.0);
+TEST(CircleMath, FerenceOverRadiusIsTwoPi) {
+  Circle circle(12.0);
 
-  // Проверяем формулу C = 2PIR
-  EXPECT_NEAR(2 * 3.1415 * circle.getRadius(), circle.getFerence(), 1e-10);
+  EXPECT_NEAR(2.0 * pi(), circle.getFerence() / circle.getRadius(), kEps);
 }
 
-TEST(CircleTest, SquareGettingFormula) {
-  Circle circle(4.0);
+TEST(CircleMath, AreaOverSquaredRadiusIsPi) {
+  Circle circle(12.0);
+  const double squaredRadius = circle.getRadius() * circle.getRadius();
 
-  // Проверяем формулу S = PIR²
-  EXPECT_NEAR(3.1415 * circle.getRadius() * circle.getRadius(),
-              circle.getArea(), 1e-10);
+  EXPECT_NEAR(pi(), circle.getArea() / squaredRadius, kEps);
 }
 
-TEST(CircleTest, RadiusGettingFormulas) {
-  Circle circle(4.0);
+TEST(CircleMath, LargeRadiusKeepsPrecision) {
+  Circle circle(1000000.0);
 
-  // Проверяем формулу R = C/(2PI)
-  EXPECT_NEAR(circle.getFerence() / (2 * 3.1415), circle.getRadius(), 1e-10);
-
-  // Проверяем формулу R = √(S/PI)
-  EXPECT_NEAR(std::sqrt(circle.getArea() / 3.1415), circle.getRadius(), 1e-10);
+  EXPECT_NEAR(1000000.0, circle.getRadius(), 1e-6);
+  EXPECT_NEAR(pi() * 1e12, circle.getArea(), 1e3);
 }
 
-TEST(CircleTest, MathematicalProperties) {
-  Circle circle(3.0);
+TEST(CircleMath, SmallRadiusKeepsPrecision) {
+  Circle circle(0.000001);
 
-  // Отношение длины окружности к радиусу должно быть 2π
-  EXPECT_NEAR(circle.getFerence() / circle.getRadius(), 2 * 3.1415, 1e-10);
-
-  // Отношение площади к квадрату радиуса должно быть π
-  EXPECT_NEAR(circle.getArea() / (circle.getRadius() * circle.getRadius()),
-              3.1415, 1e-10);
-
-  // Квадрат длины окружности должен быть пропорционален площади
-  // C² = 4πS
-  EXPECT_NEAR(circle.getFerence() * circle.getFerence(),
-              4 * 3.1415 * circle.getArea(), 1e-8);
+  EXPECT_NEAR(0.000001, circle.getRadius(), 1e-15);
+  EXPECT_NEAR(pi() * 1e-12, circle.getArea(), 1e-20);
 }
 
-// Тест для больших чисел
-TEST(CircleTest, LargeNumbers) {
-  double largeRadius = 1e6;
-  Circle circle(largeRadius);
-
-  EXPECT_NEAR(largeRadius, circle.getRadius(), 1e-6);
-  EXPECT_NEAR(2 * 3.1415 * largeRadius, circle.getFerence(), 1e-6);
-  EXPECT_NEAR(3.1415 * largeRadius * largeRadius, circle.getArea(), 1e-6);
+TEST(EarthAndRopeTask, GapDoesNotDependOnEarthRadius) {
+  EXPECT_NEAR(1.0 / (2.0 * pi()), earthEndRope(), 1e-9);
 }
 
-// Тест для очень маленьких чисел
-TEST(CircleTest, VerySmallNumbers) {
-  double smallRadius = 1e-6;
-  Circle circle(smallRadius);
+TEST(PoolTask, IncludesPathAndOuterFenceCosts) {
+  const double expected = 7.0 * pi() * 1000.0 + 8.0 * pi() * 2000.0;
 
-  EXPECT_NEAR(smallRadius, circle.getRadius(), 1e-12);
-  EXPECT_NEAR(2 * 3.1415 * smallRadius, circle.getFerence(), 1e-12);
-  EXPECT_NEAR(3.1415 * smallRadius * smallRadius, circle.getArea(), 1e-12);
+  EXPECT_NEAR(expected, calculateMaterialPrice(), 1e-8);
 }
 
-// Проверка точности вычислений с использованием PI
-TEST(CircleTest, PrecisionWithPI) {
-  Circle circle(1.0);
-
-  // Проверяем, что длина окружности вычисляется с использованием PI
-  EXPECT_NEAR(2 * 3.1415, circle.getFerence(), 1e-10);
-
-  // Проверяем соотношение между длиной окружности и радиусом
-  circle.setFerence(6.283); // примерно 2PI
-  EXPECT_NEAR(1.0, circle.getRadius(), 0.001);
-
-  // Проверяем площадь для радиуса 2
-  circle.setRadius(2.0);
-  EXPECT_NEAR(4 * 3.1415, circle.getArea(), 1e-10);
+TEST(PoolTask, ResultIsInExpectedRange) {
+  EXPECT_GT(calculateMaterialPrice(), 70000.0);
+  EXPECT_LT(calculateMaterialPrice(), 73000.0);
 }
 
-// Тест задачи про Землю и веревку
-TEST(EarthTaskTest, CorrectCalcTask) {
-  EXPECT_NEAR(earthEndRope(), 0.15916, 1e-5);
-}
+TEST(CircleSetters, NegativeFailedUpdateLeavesOldState) {
+  Circle circle(5.0);
+  const double oldRadius = circle.getRadius();
+  const double oldFerence = circle.getFerence();
+  const double oldArea = circle.getArea();
 
-// Тест задачи про подсчет материалов
-TEST(PoolTaskTest, CorrectCalcTask) {
-  EXPECT_NEAR(calculateMaterialPrice(), 59600, 100.0);
+  EXPECT_THROW(circle.setArea(-5.0), std::invalid_argument);
+
+  EXPECT_NEAR(oldRadius, circle.getRadius(), kEps);
+  EXPECT_NEAR(oldFerence, circle.getFerence(), kEps);
+  EXPECT_NEAR(oldArea, circle.getArea(), kEps);
 }

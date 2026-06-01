@@ -2,26 +2,27 @@
 #include "tasks.h"
 
 double earthEndRope() {
-  constexpr double earth_rad = 6378.1 * 1000.0;
-  Circle new_earth(earth_rad);
-  new_earth.setFerence(new_earth.getFerence() + 1.0);
+  constexpr double earthRadiusMeters = 6378.1 * 1000.0;
 
-  return new_earth.getRadius() - earth_rad;
+  Circle earth(earthRadiusMeters);
+  Circle raisedRope(earthRadiusMeters);
+  raisedRope.setFerence(earth.getFerence() + 1.0);
+
+  return raisedRope.getRadius() - earth.getRadius();
 }
 
 double calculateMaterialPrice() {
-  constexpr double cement_price = 1000.0;
-  constexpr double fence_meter_price = 2000.0;
-  constexpr double pool_rad = 3.0;
-  constexpr double walkway_width = 1.0;
+  constexpr double poolRadius = 3.0;
+  constexpr double pathWidth = 1.0;
+  constexpr double concretePrice = 1000.0;
+  constexpr double fencePrice = 2000.0;
 
-  Circle pool(pool_rad);
-  Circle around_pool(pool_rad + walkway_width);
-  double fence_price = 0.0;
-  double cement_walkway_price = 0.0;
+  Circle pool(poolRadius);
+  Circle outer(poolRadius + pathWidth);
 
-  fence_price = pool.getFerence() * fence_meter_price;
-  cement_walkway_price = (around_pool.getArea() - pool.getArea())
-                         * cement_price;
-  return fence_price + cement_walkway_price;
+  const double pathArea = outer.getArea() - pool.getArea();
+  const double concreteCost = pathArea * concretePrice;
+  const double fenceCost = outer.getFerence() * fencePrice;
+
+  return concreteCost + fenceCost;
 }
